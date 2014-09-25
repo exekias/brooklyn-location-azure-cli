@@ -23,6 +23,7 @@ prodDb.*
 
 *.log
 brooklyn*.log.*
+*azure.err
 
 *brooklyn-persisted-state/
 
