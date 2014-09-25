@@ -1,6 +1,5 @@
 package brooklyn.location.azure;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -8,7 +7,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -22,7 +20,6 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.cloud.CloudMachineNamer;
-import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.management.ExecutionManager;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -31,7 +28,6 @@ import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.system.ProcessTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.task.system.internal.SystemProcessTaskFactory.ConcreteSystemProcessTaskFactory;
-import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
@@ -100,15 +96,15 @@ public class AzureCliMachineProvisioningLocation extends AbstractCloudMachinePro
     @Override
     public AzureSshMachineLocation obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
         ConfigBag allconfig = ConfigBag.newInstanceExtending(getLocalConfigBag(), flags);
-
+        
         String region = getRequiredConfig(allconfig, CLOUD_REGION_ID);
         String imageId = getRequiredConfig(allconfig, IMAGE_ID);
         binaryLocation = getRequiredConfig(allconfig, AZURE_BINARY_PATH);
         allconfig.put(CloudLocationConfig.VM_NAME_MAX_LENGTH, 15);
         final String vmname = new CloudMachineNamer(allconfig).generateNewMachineUniqueName();
         String user = getRequiredConfig(allconfig, AZURE_USER);
-        String password = allconfig.get(AZURE_PASSWORD);
-        if (Strings.isBlank(password)) password = Identifiers.makeRandomId(8);
+        // TODO: Auto generate password that contains lower case, upper case, numeric and special character
+        String password = getRequiredConfig(allconfig, AZURE_PASSWORD);
 
         // TODO: -e (ssh) for Unix, -r (RDP) for Windows
         String cmd = binaryLocation + " vm create -z extrasmall -e -r -l \"" + region + "\" " + vmname + " " + imageId + " " + user + " " + password;
