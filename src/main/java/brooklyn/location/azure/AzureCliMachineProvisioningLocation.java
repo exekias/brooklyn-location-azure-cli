@@ -64,7 +64,11 @@ public class AzureCliMachineProvisioningLocation extends AbstractCloudMachinePro
     @SetFromFlag("imageId")
     public static final ConfigKey<String> IMAGE_ID = ConfigKeys.newStringConfigKey("imageId", "Azure image id to use for provisioning VM");
 
-    @Override
+   @SetFromFlag("roleSize")
+   public static final ConfigKey<String> ROLE_SIZE = ConfigKeys.newStringConfigKey("roleSize",
+           "Azure role size to use for provisioning VM", "extrasmall");
+
+   @Override
     public void init() {
         super.init();
         binaryLocation = checkNotNull(getConfig(AZURE_BINARY_PATH), "azureBinaryPath");
@@ -99,6 +103,7 @@ public class AzureCliMachineProvisioningLocation extends AbstractCloudMachinePro
         
         String region = getRequiredConfig(allconfig, CLOUD_REGION_ID);
         String imageId = getRequiredConfig(allconfig, IMAGE_ID);
+        String roleSize = getRequiredConfig(allconfig, ROLE_SIZE);
         binaryLocation = getRequiredConfig(allconfig, AZURE_BINARY_PATH);
         allconfig.put(CloudLocationConfig.VM_NAME_MAX_LENGTH, 15);
         final String vmname = new CloudMachineNamer(allconfig).generateNewMachineUniqueName();
@@ -107,7 +112,8 @@ public class AzureCliMachineProvisioningLocation extends AbstractCloudMachinePro
         String password = getRequiredConfig(allconfig, AZURE_PASSWORD);
 
         // TODO: -e (ssh) for Unix, -r (RDP) for Windows
-        String cmd = binaryLocation + " vm create -z extrasmall -e -r -l \"" + region + "\" " + vmname + " " + imageId + " " + user + " " + password;
+        String vmCreateString = String.format(" vm create -z %s -e -r -l \"%s\" %s %s", roleSize, region, vmname, imageId, user, password);
+        String cmd = binaryLocation + vmCreateString;
         ProcessTaskWrapper<?> result = exec("create-vm", cmd);
         if (result.getExitCode() != 0) {
             LOG.warn("Error starting VM: exitCode={}; stderr={}; stdout={}", new Object[] {result.getExitCode(), result.getStderr(), result.getStdout()});
