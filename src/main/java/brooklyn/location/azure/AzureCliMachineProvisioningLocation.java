@@ -112,7 +112,7 @@ public class AzureCliMachineProvisioningLocation extends AbstractCloudMachinePro
         String password = getRequiredConfig(allconfig, AZURE_PASSWORD);
 
         // TODO: -e (ssh) for Unix, -r (RDP) for Windows
-        String vmCreateString = String.format(" vm create -z %s -e -r -l \"%s\" %s %s", roleSize, region, vmname, imageId, user, password);
+        String vmCreateString = String.format(" vm create -z %s -e -r -l \"%s\" %s %s %s %s", roleSize, region, vmname, imageId, user, password);
         String cmd = binaryLocation + vmCreateString;
         ProcessTaskWrapper<?> result = exec("create-vm", cmd);
         if (result.getExitCode() != 0) {
