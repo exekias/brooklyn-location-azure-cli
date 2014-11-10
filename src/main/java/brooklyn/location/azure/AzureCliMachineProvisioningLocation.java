@@ -138,11 +138,13 @@ public class AzureCliMachineProvisioningLocation extends AbstractCloudMachinePro
         try {
             createEndpoints((Set<Integer>)flags.get("inboundPorts"), vmname);
             String dnsname = getVmProperty(vmname, "DNSName");
+            String subnetdnsname = getVmProperty(vmname, "IPAddress");
 
             AzureSshMachineLocation machine = addChild(LocationSpec.create(AzureSshMachineLocation.class)
                     .configure(flags)
                     .configure("name", vmname)
                     .configure("address", dnsname)
+                    .configure("subnetAddress", subnetdnsname)
                     .configure("user", user)
                     .configure("password", password));
 
