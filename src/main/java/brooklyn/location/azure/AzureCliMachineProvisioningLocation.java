@@ -64,6 +64,9 @@ public class AzureCliMachineProvisioningLocation extends AbstractCloudMachinePro
     @SetFromFlag("imageId")
     public static final ConfigKey<String> IMAGE_ID = ConfigKeys.newStringConfigKey("imageId", "Azure image id to use for provisioning VM");
 
+    @SetFromFlag("machineSize")
+    public static final ConfigKey<String> MACHINE_SIZE = ConfigKeys.newStringConfigKey("machineSize", "Azure VM size", "extrasmall");
+
     @Override
     public void init() {
         super.init();
@@ -96,9 +99,10 @@ public class AzureCliMachineProvisioningLocation extends AbstractCloudMachinePro
     @Override
     public AzureSshMachineLocation obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
         ConfigBag allconfig = ConfigBag.newInstanceExtending(getLocalConfigBag(), flags);
-        
+
         String region = getRequiredConfig(allconfig, CLOUD_REGION_ID);
         String imageId = getRequiredConfig(allconfig, IMAGE_ID);
+        String machineSize = getRequiredConfig(allconfig, MACHINE_SIZE);
         binaryLocation = getRequiredConfig(allconfig, AZURE_BINARY_PATH);
         allconfig.put(CloudLocationConfig.VM_NAME_MAX_LENGTH, 15);
         final String vmname = new CloudMachineNamer(allconfig).generateNewMachineUniqueName();
@@ -107,7 +111,7 @@ public class AzureCliMachineProvisioningLocation extends AbstractCloudMachinePro
         String password = getRequiredConfig(allconfig, AZURE_PASSWORD);
 
         // TODO: -e (ssh) for Unix, -r (RDP) for Windows
-        String cmd = binaryLocation + " vm create -z extrasmall -e -r -l \"" + region + "\" " + vmname + " " + imageId + " " + user + " " + password;
+        String cmd = binaryLocation + " vm create -z " + machineSize + " -e -r -l \"" + region + "\" " + vmname + " " + imageId + " " + user + " " + password;
         ProcessTaskWrapper<?> result = exec("create-vm", cmd);
         if (result.getExitCode() != 0) {
             LOG.warn("Error starting VM: exitCode={}; stderr={}; stdout={}", new Object[] {result.getExitCode(), result.getStderr(), result.getStdout()});
